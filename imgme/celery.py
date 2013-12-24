@@ -1,16 +1,14 @@
 from __future__ import absolute_import
 
+import os
+
 from celery import Celery
+from django.conf import settings
 
-app = Celery('imgme',
-        broker='amqp://',
-        backend='redis://localhost',
-        include=['imgme.tasks'])
+# set the default Django settings module for the 'celery' program.
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'imgme.settings')
 
-# Optional configuration, see the application user guide.
-app.conf.update(
-    CELERY_TASK_RESULT_EXPIRES=3600
-)
+app = Celery('imgme')
+app.config_from_object('django.conf:settings')
+app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
-if __name__ == '__main__':
-    app.start()
