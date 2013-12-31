@@ -2,6 +2,10 @@ from django.shortcuts import render, redirect
 
 from .auth import ImgurAuth
 
+def home(request):
+    print(ImgurAuth.access_token)
+    render(request, 'home.html')
+
 def auth(request):
     redirect_uri = 'http://localhost:8000/auth/granted'
     params = {
@@ -15,7 +19,10 @@ def auth(request):
     
 def granted(request):
     code = request.GET['code']
-    print(code)
+    
+    if not code:
+        return redirect('/')
+    
     redirect_uri = 'http://localhost:8000/auth/granted'
     session = ImgurAuth.get_auth_session(data={
         'code': code,
@@ -23,4 +30,5 @@ def granted(request):
         'redirect_uri': redirect_uri
     })
     
-    print(session)
+    return redirect('/')
+

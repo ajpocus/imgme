@@ -10,4 +10,3 @@ ImgurAuth = OAuth2Service(
     access_token_url='https://api.imgur.com/oauth2/token',
     base_url='https://api.imgur.com')
 
-
