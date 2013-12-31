@@ -19,16 +19,17 @@ def auth(request):
     
 def granted(request):
     code = request.GET['code']
-    
+
     if not code:
         return redirect('/')
-    
+    print(request)
     redirect_uri = 'http://localhost:8000/auth/granted'
     session = ImgurAuth.get_auth_session(data={
         'code': code,
         'grant_type': 'authorization_code',
         'redirect_uri': redirect_uri
     })
+    print(session)
     
     return redirect('/')
 
