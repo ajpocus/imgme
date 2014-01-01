@@ -1,5 +1,6 @@
 import os
 import cgi
+import json
 
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
@@ -7,7 +8,7 @@ from django.contrib.auth.models import User
 
 from requests_oauthlib import OAuth2Session
 
-from .auth import ImgurAuth
+from .models import Profile
 
 client_id = os.environ['IMGUR_CLIENT_ID']
 client_secret = os.environ['IMGUR_CLIENT_SECRET']
@@ -16,29 +17,34 @@ authorize_url = base_url + "/oauth2/authorize"
 token_url = base_url + "/oauth2/token"
 redirect_uri = "http://localhost:8000/auth/granted"
 
+oauth = OAuth2Session(client_id, redirect_uri=redirect_uri)
+
 def home(request):
-    print(ImgurAuth.access_token)
-    render(request, 'home.html')
+    return render(request, 'home.html')
 
 def auth(request):
-    oauth = OAuth2Session(client_id, redirect_uri=redirect_uri)
     redirect_url, state = oauth.authorization_url(authorize_url)
         
     return redirect(redirect_url)
     
 def granted(request):
     code = request.GET['code']
-
-    if not code:
-        return redirect('/')
-    print(request)
-    redirect_uri = 'http://localhost:8000/auth/granted'
-    session = ImgurAuth.get_auth_session(data={
-        'code': code,
-        'grant_type': 'authorization_code',
-        'redirect_uri': redirect_uri
-    })
-    print(session)
+    secret = os.environ['IMGUR_CLIENT_SECRET']
+    token = oauth.fetch_token(token_url, code=code, client_secret=secret)
     
-    return redirect('/')
-
+    res = oauth.get(base_url + "/3/account/me")
+    obj = json.loads(res.text)
+    me = obj['data']
+    
+    print(me)
+    
+    profile = Profile.objects.get(imgur_id=me['id'])
+    if not profile:
+        profile = Profile.objects.create(me)
+        login(request, profile.user)
+        
+    print (r.text)
+    print(token)
+    
+    return redirect("/")
+    
